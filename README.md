@@ -4,9 +4,11 @@ l33tport
 
 #### Downloads JSON status data from Telekom Speedport Hybrid
 
-You own a Telekom Speedport Router? The web-interface sucks? This script helps you to access the status information that is available in the "hidden" [Engineer-Menu](http://speedport.ip/engineer/html/dsl.html?lang=en):
+You own a Telekom Speedport Router? The web-interface sucks? It forces you to login every fucking time? You want to draw fancy rrdtool-graphs from raw data?
 
-![The engineer menu of the Telekom Speedport Hybrid](assets/EngineerMenu.jpg)
+This script helps you to access the status information that is available in the "hidden" [Engineer-Menu](http://speedport.ip/engineer/html/dsl.html?lang=en), which is only available after you perform a login on the bloated web interface.
+
+![The engineer menu of the Telekom Speedport Hybrid.](assets/EngineerMenu.jpg)
 
 Prerequisites
 ==========
