@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /*
 ----------------------------------------------------------------------------
 "THE BEER-WARE LICENSE" (Revision 42): <github@dysternis.de> wrote this
