@@ -51,7 +51,7 @@ To get DSL line information and memory utilisation of the router, call
 
  ```./l33tport.js dsl memory```
 
-The result will look like this:git 
+The result will look like this:
  
 ```JSON
 
