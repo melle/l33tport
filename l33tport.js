@@ -192,7 +192,7 @@ function downloadJsonInfo(fileName)
 if (2 == process.argv.length) {
   console.log(" l33tport - downloads JSON status data from Telekom Speedport Hybrid");
   console.log("");
-  console.log(" One ore more of the folloing options may be:");
+  console.log(" One ore more of the following options may be:");
   console.log("");
   console.log(" dsl              DSL connection status and line information");
   console.log(" interfaces       Network interfaces");
