@@ -226,6 +226,10 @@ function downloadJsonInfo(fieldName, dataCallback)
   });
 }
 
+// any parameter given?
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}
 
 // json parameter given?
 if (program.json) {
