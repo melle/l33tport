@@ -23,7 +23,7 @@ var sessionID = "";
 /**
  * Requests the password-challenge from the router. Calls handleChallenge() on success.
  */
-function getChallenge() {
+function getChallenge(dataCallback) {
   var data = querystring.stringify({
         csrf_token: "nulltoken",
         showpw: "0",
@@ -45,7 +45,7 @@ function getChallenge() {
       res.on('data', function (chunk) {
           // challengev -> will be sent as cookie 
           challengev = JSON.parse(chunk)[1].varvalue;
-          handleChallenge(challengev);          
+          handleChallenge(challengev, dataCallback);          
       });
   });
 
@@ -56,17 +56,17 @@ function getChallenge() {
 /** 
  * Hashes challenge + password and sent it back to speedport. 
  */
-function handleChallenge(challenge) {
+function handleChallenge(challenge, dataCallback) {
   var encryptpwd = sjcl.hash.sha256.hash(challenge + ":" + PASSWORD);
   var passwordhash = sjcl.codec.hex.fromBits(encryptpwd);
 
-  sendPassword(passwordhash);
+  sendPassword(passwordhash, dataCallback);
 }
 
 /** 
  * Sends the hashed password to the router and acquires a session ID.
  */
-function sendPassword(passwordHash) {
+function sendPassword(passwordHash, dataCallback) {
   var data = querystring.stringify({
       password: passwordHash,
       showpw: "0",
@@ -117,7 +117,7 @@ function sendPassword(passwordHash) {
           var sid = cookie.match(/^.*(SessionID_R3=[a-zA-Z0-9]*).*/);
           sessionID = sid[1];
 
-          performRequests();
+          performRequests(dataCallback);
       });
   });
 
@@ -153,16 +153,16 @@ function sendPassword(passwordHash) {
  * /data/Status.json (No login needed)
  *
  */
-function performRequests()
+function performRequests(dataCallback)
 {
   var args = process.argv.slice(2);
   args.forEach(function(entry) {
-    downloadJsonInfo(entry);
+    downloadJsonInfo(entry, dataCallback);
   });
 }
 
 /** Downloads the give json file and prints to stdout. */
-function downloadJsonInfo(fileName)
+function downloadJsonInfo(fileName, dataCallback)
 {
   var cookie = "challengev=" + challengev + "; " + sessionID;
   var requestPath = "/data/" + fileName + ".json";
@@ -223,4 +223,6 @@ if (2 == process.argv.length) {
 }
 
 // start by requesting the challenge for the session
-getChallenge();
+getChallenge(function(data) {
+    console.log(data);
+});
