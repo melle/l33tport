@@ -112,8 +112,7 @@ function sendPassword(passwordHash, dataCallback) {
             process.exit(1);
           }
 
-          // poor mans str(), cookie needs to be a string
-          var cookie = "" + res.headers['set-cookie'];
+          var cookie = res.headers['set-cookie'].toString();
           var sid = cookie.match(/^.*(SessionID_R3=[a-zA-Z0-9]*).*/);
           sessionID = sid[1];
 
@@ -182,7 +181,8 @@ function downloadJsonInfo(fileName, dataCallback)
     }
 
     res.on('data', function (chunk) {
-      console.log("" + chunk);
+      // fix invalid json ....
+      dataCallback(chunk.toString().replace(/\'/g,'\"'));
     }).on('error', function(e) {
       console.log("Got error: ", e);
     });
