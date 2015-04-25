@@ -28,10 +28,49 @@ var program = require('commander'); // command line parsing
 var challengev = "";
 var sessionID = "";
 
+// command line parsing
+program
+  .version('0.0.1')
+  .description('Downloads JSON status data from Telekom Speedport Hybrid')
+  .option('-j, --json <status field>', 'Returns the status JSON of the given field')
+
+program.on('--help', function(){
+  console.log('  Currently supported status fields:');
+  console.log('');
+  console.log('  dsl              DSL connection status and line information');
+  console.log('  interfaces       Network interfaces');
+  console.log('  arp              ARP table');
+  console.log('  session          PPPoE Session');
+  console.log('  dhcp_client      DHCP client');
+  console.log('  dhcp_server      DHCP server, includes DHCP leases ');
+  console.log('  ipv6             IPv6 Router Advertisement');
+  console.log('  dns              DNS server and cache information');
+  console.log('  routing          Routing table');
+  console.log('  igmp_proxy       IGMP Proxy');
+  console.log('  igmp_snooping    IGMP Snooping Table');
+  console.log('  wlan             WLAN status and information');
+  console.log('  module           Software version information');
+  console.log('  memory           Memory and CPU utilization');
+  console.log('  speed            Speed dial');
+  console.log('  webdav           WebDAV URL');
+  console.log('  bonding_client   Bonding HA client');
+  console.log('  bonding_tunnel   Bonding tunnel');
+  console.log('  filterlist       Filter list table');
+  console.log('  bonding_tr181    Bonding TR-181');
+  console.log('  lteinfo          LTE information');
+  console.log('  Status           Systeminformation (no login needed)');
+  console.log('');
+  console.log('  Example: node ./l33tport.js -j dsl');
+  console.log('');
+});
+
+program.parse(process.argv);
+
+
 /**
  * Requests the password-challenge from the router. Calls handleChallenge() on success.
  */
-function getChallenge(dataCallback) {
+function getChallenge(fieldName, dataCallback) {
   var data = querystring.stringify({
         csrf_token: "nulltoken",
         showpw: "0",
@@ -53,7 +92,7 @@ function getChallenge(dataCallback) {
       res.on('data', function (chunk) {
           // challengev -> will be sent as cookie 
           challengev = JSON.parse(chunk)[1].varvalue;
-          handleChallenge(challengev, dataCallback);          
+          handleChallenge(challengev, fieldName, dataCallback);          
       });
   });
 
@@ -64,17 +103,17 @@ function getChallenge(dataCallback) {
 /** 
  * Hashes challenge + password and sent it back to speedport. 
  */
-function handleChallenge(challenge, dataCallback) {
+function handleChallenge(challenge, fieldName, dataCallback) {
   var encryptpwd = sjcl.hash.sha256.hash(challenge + ":" + PASSWORD);
   var passwordhash = sjcl.codec.hex.fromBits(encryptpwd);
 
-  sendPassword(passwordhash, dataCallback);
+  sendPassword(passwordhash, fieldName, dataCallback);
 }
 
 /** 
  * Sends the hashed password to the router and acquires a session ID.
  */
-function sendPassword(passwordHash, dataCallback) {
+function sendPassword(passwordHash, fieldName, dataCallback) {
   var data = querystring.stringify({
       password: passwordHash,
       showpw: "0",
@@ -124,7 +163,7 @@ function sendPassword(passwordHash, dataCallback) {
           var sid = cookie.match(/^.*(SessionID_R3=[a-zA-Z0-9]*).*/);
           sessionID = sid[1];
 
-          performRequests(dataCallback);
+          downloadJsonInfo(fieldName, dataCallback);
       });
   });
 
@@ -158,21 +197,11 @@ function sendPassword(passwordHash, dataCallback) {
  * /data/letinfo.json
  *
  * /data/Status.json (No login needed)
- *
  */
-function performRequests(dataCallback)
-{
-  var args = process.argv.slice(2);
-  args.forEach(function(entry) {
-    downloadJsonInfo(entry, dataCallback);
-  });
-}
-
-/** Downloads the give json file and prints to stdout. */
-function downloadJsonInfo(fileName, dataCallback)
+function downloadJsonInfo(fieldName, dataCallback)
 {
   var cookie = "challengev=" + challengev + "; " + sessionID;
-  var requestPath = "/data/" + fileName + ".json";
+  var requestPath = "/data/" + fieldName + ".json";
 
   var options = {
       host: SPEEDPORT,
@@ -197,40 +226,11 @@ function downloadJsonInfo(fileName, dataCallback)
   });
 }
 
-if (2 == process.argv.length) {
-  console.log(" l33tport - downloads JSON status data from Telekom Speedport Hybrid");
-  console.log("");
-  console.log(" One ore more of the following options may be:");
-  console.log("");
-  console.log(" dsl              DSL connection status and line information");
-  console.log(" interfaces       Network interfaces");
-  console.log(" arp              ARP table");
-  console.log(" session          PPPoE Session");
-  console.log(" dhcp_client      DHCP client");
-  console.log(" dhcp_server      DHCP server, includes DHCP leases ");
-  console.log(" ipv6             IPv6 Router Advertisement");
-  console.log(" dns              DNS server and cache information");
-  console.log(" routing          Routing table");
-  console.log(" igmp_proxy       IGMP Proxy");
-  console.log(" igmp_snooping    IGMP Snooping Table");
-  console.log(" wlan             WLAN status and information");
-  console.log(" module           Software version information");
-  console.log(" memory           Memory and CPU utilization");
-  console.log(" speed            Speed dial");
-  console.log(" webdav           WebDAV URL");
-  console.log(" bonding_client   Bonding HA client");
-  console.log(" bonding_tunnel   Bonding tunnel");
-  console.log(" filterlist       Filter list table");
-  console.log(" bonding_tr181    Bonding TR-181");
-  console.log(" lteinfo          LTE information");
-  console.log(" Status           Systeminformation (no login needed)");
-  console.log("");
-  console.log(" Example: node ./l33tport.js dsl lteinfo");
 
-  process.exit(1);
+// json parameter given?
+if (program.json) {
+  getChallenge(program.json, function(data) {
+    var parsed = JSON.parse(data);
+    console.log(parsed);
+  });
 }
-
-// start by requesting the challenge for the session
-getChallenge(function(data) {
-    console.log(data);
-});
