@@ -11,10 +11,18 @@ me a beer in return. Thomas Mellenthin.
 const SPEEDPORT = "192.168.2.1"; // the IP address or hostname of your speedport
 const PASSWORD  = "66666666"; // the login-password of the speedport
 
+// Requiremtens: commander, sjcl
+//
+// npm install commander
+// npm install sjcl
+//
+
+
 // we need the Stanford Javascript Crypto Library, see https://github.com/bitwiseshiftleft/sjcl
-var sjcl = require("./sjcl.js");
+var sjcl = require("sjcl");
 var querystring = require('querystring');
 var http = require('http');
+var program = require('commander'); // command line parsing
 
 // used during the login procedure
 var challengev = "";

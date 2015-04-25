@@ -12,7 +12,12 @@ This script helps you to access the status information that is available in the 
 
 Prerequisites
 ==========
-l33tport was written using node.js, so you need to have a working node installation. For the crypto-foo the [Stanford Javascript Crypto Library](https://github.com/bitwiseshiftleft/sjclsjcl.js) is used. A minified copy is part of this repository (```sjcl.js```).
+l33tport was written using node.js, so you need to have a working node installation. For the crypto-foo we're are using the [Stanford Javascript Crypto Library](https://github.com/bitwiseshiftleft/sjclsjcl.js), for commandline parsing commander is needed:
+
+```
+npm install sjcl
+npm install commander
+```
 
 Usage
 =====
