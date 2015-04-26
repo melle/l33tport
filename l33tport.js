@@ -30,9 +30,11 @@ var sessionID = "";
 
 // command line parsing
 program
-  .version('0.0.1')
+  .version('0.0.2')
   .description('Downloads JSON status data from Telekom Speedport Hybrid')
-  .option('-j, --json <status field>', 'Returns the status JSON of the given field')
+  .option('-o, --output <format>', 'Output format (json, rrd)', /^(json|rrd)$/i, 'json')
+  .option('-d, --dsNames <dsNames>', 'rrdtool update format specifier')
+  .option('-f, --fieldname <fieldname>', 'specifies the status field');
 
 program.on('--help', function(){
   console.log('  Currently supported status fields:');
@@ -60,7 +62,17 @@ program.on('--help', function(){
   console.log('  lteinfo          LTE information');
   console.log('  Status           Systeminformation (no login needed)');
   console.log('');
-  console.log('  Example: node ./l33tport.js -j dsl');
+  console.log('  Examples:');
+  console.log('');
+  console.log('  Download dsl status file and print content in JSON format:');
+  console.log('');
+  console.log('  $ node ./l33tport.js -f dsl');
+  console.log('');
+  console.log('  Download dsl status file and format output to fit as input for \'rddtool update\'');
+  console.log('  command. Field names must be equal to names used in the JSON output:');
+  console.log('');
+  console.log('  $ node ./l33tport.js -f dsl -o rrd \\');
+  console.log('    -u "uSNR,dSNR,uactual,dactual,uatainable,dattainable"');
   console.log('');
 });
 
@@ -226,15 +238,57 @@ function downloadJsonInfo(fieldName, dataCallback)
   });
 }
 
-// any parameter given?
+// check parameters, was any parameter given?
 if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
+else if (!program.output || !program.fieldname) {
+  console.log('⚠️  Error: output format and field name must be specified.');
+  program.outputHelp();
+}
+else if (program.output == 'rrd' && !program.dsNames) {
+  console.log('⚠️  Error: rrdoutput requires dsNames parameter.');
+  program.outputHelp();
+}
 
-// json parameter given?
-if (program.json) {
-  getChallenge(program.json, function(data) {
+
+// format parameter given?
+if (program.output && program.output != 'rrd') {
+  // simple json output
+  getChallenge(program.fieldname, function(data) {
     var parsed = JSON.parse(data);
     console.log(parsed);
   });
-}
+} 
+// RRDUPDATE parameter given?
+else if (program.fieldname && program.dsNames) {
+  getChallenge(program.fieldname, function(data) {
+    var parsed = JSON.parse(data);
+
+    // split fields
+    dsNames = program.dsNames.split(',');
+    var rrdUpdate = '--template ';
+    for (var dsName in dsNames) {
+      rrdUpdate += dsNames[dsName];
+      rrdUpdate += ':';
+    }
+    // truncate last colon
+    rrdUpdate = rrdUpdate.slice(0,-1);
+
+    // prepare values section
+    rrdUpdate += ' N:';
+
+    // find every value for the given name
+    for (var dsName in dsNames) {
+      for (var v in parsed) {
+        var value = parsed[v][dsNames[dsName]];
+        if (null != value) {
+          rrdUpdate += value + ':';
+        }
+      }
+    }
+    // truncate last colon
+    rrdUpdate = rrdUpdate.slice(0,-1);
+    console.log(rrdUpdate);
+  });
+};
