@@ -238,6 +238,33 @@ function downloadJsonInfo(fieldName, dataCallback)
   });
 }
 
+/**
+ * Walks the multidimensional array given and returns the values 
+ * of the given keys.
+ *
+ * At the moment the order of the keys must be the same order of 
+ * the elemens in hte input array.
+ *
+ * Solution from http://stackoverflow.com/a/10666489/699208
+ */
+function walkArray(inArray, dsNames) {
+    var s = [];
+    for(var k in inArray) {
+      if(typeof inArray[k] == 'object') {
+        s.push(walkArray(inArray[k], dsNames) );
+      }
+      else {
+        for (var dsName in dsNames) {
+          if (k == dsNames[dsName]) {
+            s.push(inArray[k]);
+          }
+        }
+      }
+    }
+    return s.join(":");
+}
+
+
 // check parameters, was any parameter given?
 if (!process.argv.slice(2).length) {
   program.outputHelp();
@@ -278,17 +305,9 @@ else if (program.fieldname && program.dsNames) {
     // prepare values section
     rrdUpdate += ' N:';
 
-    // find every value for the given name
-    for (var dsName in dsNames) {
-      for (var v in parsed) {
-        var value = parsed[v][dsNames[dsName]];
-        if (null != value) {
-          rrdUpdate += value + ':';
-        }
-      }
-    }
-    // truncate last colon
-    rrdUpdate = rrdUpdate.slice(0,-1);
+    // walk the values array
+    rrdUpdate += walkArray(parsed, dsNames);
+
     console.log(rrdUpdate);
   });
 };
