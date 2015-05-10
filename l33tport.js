@@ -72,7 +72,7 @@ program.on('--help', function(){
   console.log('  command. Field names must be equal to names used in the JSON output:');
   console.log('');
   console.log('  $ node ./l33tport.js -f dsl -o rrd \\');
-  console.log('    -u "uSNR,dSNR,uactual,dactual,uatainable,dattainable"');
+  console.log('    -d "uSNR,dSNR,uactual,dactual,uatainable,dattainable"');
   console.log('');
 });
 
