@@ -52,14 +52,13 @@ You may use one ore more of the following options as arguments:
  Usage
 =====
 
-To get DSL line information and memory utilisation of the router, call
+To get DSL line information of the router, call
 
- ```./l33tport.js dsl memory```
+ ```./l33tport.js -f dsl```
 
 The result will look like this:
  
 ```JSON
-
 {
 	'Connection':
 	{
@@ -98,17 +97,4 @@ The result will look like this:
 		'dFEC'		:'0'
 	}
 }
-
- 
-{
-    'amm'             :'253092 KB',
-    'used_free_main'  :'48% vs 52%',
-    'afm'             :'262144 KB',
-    'used_free_flash' :'61% vs 39%',
-    'cpu_load'        :'5%',
-    'adcm'            :'512 KB',
-    'used_free_dns'   :'4.63% vs 95.37%',
-    'nodce'           :'354'
-}
-
 ```
