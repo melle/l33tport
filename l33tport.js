@@ -243,7 +243,7 @@ function downloadJsonInfo(fieldName, dataCallback)
  * of the given keys.
  *
  * At the moment the order of the keys must be the same order of 
- * the elemens in hte input array.
+ * the elemens in the input array.
  *
  * Solution from http://stackoverflow.com/a/10666489/699208
  */
@@ -261,7 +261,10 @@ function walkArray(inArray, dsNames) {
         }
       }
     }
-    return s.join(":");
+    
+    // For unknown reasons, the result is prefixed with a colon
+    // sometimes. I guess the array contains bogus content then.
+    return s.join(":").replace(/^:/, '');
 }
 
 
