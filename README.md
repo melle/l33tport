@@ -22,9 +22,20 @@ npm install commander
 Usage
 =====
 
-Adjust the address (Usually ```speedport.ip``` / ```192.168.2.1```) and the password in the head of the script.
+Adjust the address (Usually ```speedport.ip``` / ```192.168.2.1```) and the password in the header of the script.
 
-You may use one ore more of the following options as arguments:
+Usage: speedport [options]
+
+Options:
+
+    -h, --help                   output usage information
+    -V, --version                output the version number
+    -o, --output <format>        Output format (json, rrd)
+    -d, --dsNames <dsNames>      rrdtool update format specifier
+    -f, --fieldname <fieldname>  specifies the status field
+
+
+You may use one of the following fieldnames (i.e. -f dsl):
 
 * **dsl**              DSL connection status and line information
 * **interfaces**       Network interfaces
@@ -49,52 +60,63 @@ You may use one ore more of the following options as arguments:
 * **lteinfo**          LTE information
 * **Status**           Systeminformation (no login needed)
 
- Usage
-=====
+Examples
+========
 
-To get DSL line information of the router, call
+Download dsl status file and print content in JSON format:
 
- ```./l33tport.js -f dsl```
+    $ node ./l33tport.js -f dsl
 
 The result will look like this:
- 
-```JSON
-{
-	'Connection':
-	{
-		'dsl_operaing_mode':'ADSL_2plus',
-		'path_mode'		 :'None',
-		'state'			 :'Up',
-		'training_results'	 :'Showtime',
-		'mode_lo'			 :'L0',
-		'vpi_vci'			 :'1/32'
-	},
-	'Line':
-	{
-		'uactual'		:'1167',
-		'dactual'		:'10503',
-		'uattainable'	:'1368',
-		'dattainable'	:'13972',
-		'uSNR'		:'109',
-		'dSNR'		:'121',
-		'uSignal'		:'129',
-		'dSignal'		:'0',
-		'uLine'		:'204',
-		'dLine'		:'430',
-		'uBIN'		:'512',
-		'dBIN'		:'512',
-		'uFEC_size'	:'1',
-		'dFEC_size'	:'1',
-		'uCodeword'	:'0',
-		'dCodeword'	:'0',
-		'uInterleave'	:'0',
-		'dInterleave'	:'0',
-		'uCRC'		:'0',
-		'dCRC'		:'69979',
-		'uHEC'		:'0',
-		'dHEC'		:'138428',
-		'uFEC'		:'0',
-		'dFEC'		:'0'
-	}
-}
+
 ```
+{ Connection: 
+   { dsl_operaing_mode: 'ADSL_2plus',
+     path_mode: 'None',
+     state: 'Up',
+     training_results: 'Showtime',
+     mode_lo: 'L0',
+     vpi_vci: '1/32' },
+  Line: 
+   { uactual: '1167',
+     dactual: '13551',
+     uattainable: '1368',
+     dattainable: '13524',
+     uSNR: '109',
+     dSNR: '59',
+     uSignal: '130',
+     dSignal: '0',
+     uLine: '210',
+     dLine: '420',
+     uBIN: '512',
+     dBIN: '512',
+     uFEC_size: '1',
+     dFEC_size: '1',
+     uCodeword: '0',
+     dCodeword: '0',
+     uInterleave: '0',
+     dInterleave: '0',
+     uCRC: '4',
+     dCRC: '6901',
+     uHEC: '2',
+     dHEC: '30865',
+     uFEC: '0',
+     dFEC: '0' } }
+```
+
+rrdtool integration
+=============
+
+l33tport 's output may be formatted to fit as input for 'rddtool update' command. The rrdtool data source names must be equal to names used in the JSON. Example for updating the dsl-Databae:
+
+    $ ./l33tport.js -f dsl -o rrd -d "uSNR,dSNR,uactual,dactual,uatainable,dattainable"
+
+The output looks like this:
+
+    --template uSNR:dSNR:uactual:dactual:uatainable:dattainable N:1167:13551:13468:109:59
+   
+It may be fed directly into a ```rrdtool update``` call:
+
+    rrdtool update dsl.rrd $(./l33tport.js -f dsl -o rrd -d "uSNR,dSNR,uactual,dactual,uatainable,dattainable")
+
+See the ```rrdtool``` directory for sample scripts.
