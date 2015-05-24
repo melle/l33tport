@@ -1,0 +1,10 @@
+# Crontab example for l33tport.
+#
+# The firmware is stupid and disallows multiple client connections.
+# To avoid data loss due to rejected connections, make sure you call
+# the script not in parallel (i.e. by creating two lines in crontab).
+#
+# The only working way is to join all calls in one single cron-entry:
+#
+* * * * * rrdtool update /home/melle/stats/dsl.rrd $(/home/melle/stats/l33tport/speedport.js -f dsl -o rrd -d "uactual,dactual,uattainable,dattainable,uSNR,dSNR,uLine,dLine,uCRC,dCRC,uHEC,dHEC"); rrdtool update /home/melle/stats/lteinfo.rrd $(/home/melle/stats/l33tport/speedport.js -f lteinfo -o rrd -d "rsrp,rsrq");
+
