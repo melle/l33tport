@@ -107,6 +107,8 @@ The result will look like this:
 rrdtool integration
 =============
 
+![A DSL line with lots of errors.](assets/dsl-48h.png)
+
 l33tport 's output may be formatted to fit as input for 'rddtool update' command. The rrdtool data source names must be equal to names used in the JSON. Example for updating the dsl-Databae:
 
     $ ./l33tport.js -f dsl -o rrd -d "uSNR,dSNR,uactual,dactual,uatainable,dattainable"
