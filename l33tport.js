@@ -229,9 +229,12 @@ function downloadJsonInfo(fieldName, dataCallback)
       console.log("WTF: ", res.statusCode);
     }
 
+    var body = '';
     res.on('data', function (chunk) {
-      // fix invalid json ....
-      dataCallback(chunk.toString().replace(/\'/g,'\"'));
+        body += chunk;
+    }).on('end', function() {
+        // got everything, now fix the invalid json ....
+        dataCallback(body.replace(/\'/g,'\"'));
     }).on('error', function(e) {
       console.log("Got error: ", e);
     });
