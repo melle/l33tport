@@ -298,14 +298,17 @@ function safeParse(input) {
 // check parameters, was any parameter given?
 if (!process.argv.slice(2).length) {
   program.outputHelp();
+  process.exit();
 }
 else if (!program.output || !program.fieldname) {
   console.log('⚠️  Error: output format and field name must be specified.');
   program.outputHelp();
+  process.exit();
 }
 else if (program.output == 'rrd' && !program.dsNames) {
   console.log('⚠️  Error: rrdoutput requires dsNames parameter.');
   program.outputHelp();
+  process.exit();
 }
 
 
