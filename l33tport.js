@@ -270,6 +270,30 @@ function walkArray(inArray, dsNames) {
     return s.join(":").replace(/^:/, '');
 }
 
+/**
+ * calls JSON.parse() and catches exceptions.
+ */
+function safeParse(input) {
+    var parsed = null;
+    try {
+      parsed = JSON.parse(input);
+    }
+    catch (e) {
+      console.error("Could not parse JSON:");
+      console.error(input);
+
+      var exmsg = "";
+      if (e.message) {
+          exmsg += e.message;
+      }
+      if (e.stack) {
+          exmsg += ' | stack: ' + e.stack;
+      }
+      console.error(exmsg);
+    }
+
+    return parsed;
+}
 
 // check parameters, was any parameter given?
 if (!process.argv.slice(2).length) {
@@ -289,14 +313,14 @@ else if (program.output == 'rrd' && !program.dsNames) {
 if (program.output && program.output != 'rrd') {
   // simple json output
   getChallenge(program.fieldname, function(data) {
-    var parsed = JSON.parse(data);
+    var parsed = safeParse(data);
     console.log(parsed);
   });
 } 
 // RRDUPDATE parameter given?
 else if (program.fieldname && program.dsNames) {
   getChallenge(program.fieldname, function(data) {
-    var parsed = JSON.parse(data);
+    var parsed = safeParse(data);
 
     // split fields
     dsNames = program.dsNames.split(',');
