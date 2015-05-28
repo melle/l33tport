@@ -234,7 +234,10 @@ function downloadJsonInfo(fieldName, dataCallback)
         body += chunk;
     }).on('end', function() {
         // got everything, now fix the invalid json ....
-        dataCallback(body.replace(/\'/g,'\"'));
+        var fixedQuotes = body.replace(/\'/g,'\"');
+        // fix  },]  in arrays...
+        var fixedArrays = fixedQuotes.replace(/\},\s+? +?\]/,"}\n    ]");
+        dataCallback(fixedArrays);
     }).on('error', function(e) {
       console.log("Got error: ", e);
     });
@@ -287,7 +290,7 @@ function safeParse(input) {
           exmsg += e.message;
       }
       if (e.stack) {
-          exmsg += ' | stack: ' + e.stack;
+          exmsg += '\n' + e.stack;
       }
       console.error(exmsg);
     }
