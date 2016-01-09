@@ -60,7 +60,14 @@ program.on('--help', function(){
   console.log('  filterlist       Filter list table');
   console.log('  bonding_tr181    Bonding TR-181');
   console.log('  lteinfo          LTE information');
-  console.log('  Status           Systeminformation (no login needed)');
+  console.log('  Status           System information (no login needed)');
+  console.log('  SecureStatus     Secure system information (login needed)');
+  console.log('  Overview         General status information, i.e. tunnel status');
+  console.log('  modules          ');
+  console.log('  Abuse            trusted SMTP servers configuration');
+  console.log('  DECTStation      DECT configuration');
+  console.log('  hsdelmobil       DECT handset status');
+  console.log('  LAN              LAN status (DHCP assigned IPs ect.)');
   console.log('');
   console.log('  Examples:');
   console.log('');
