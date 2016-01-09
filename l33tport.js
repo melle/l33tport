@@ -34,10 +34,10 @@ program
   .description('Downloads JSON status data from Telekom Speedport Hybrid')
   .option('-o, --output <format>', 'Output format (json, rrd)', /^(json|rrd)$/i, 'json')
   .option('-d, --dsNames <dsNames>', 'rrdtool update format specifier')
-  .option('-f, --fieldname <fieldname>', 'specifies the status field');
+  .option('-f, --filename <filename>', 'specifies the file to download');
 
 program.on('--help', function(){
-  console.log('  Currently supported status fields:');
+  console.log('  Here is a list of the known working file names:');
   console.log('');
   console.log('  dsl              DSL connection status and line information');
   console.log('  interfaces       Network interfaces');
@@ -82,7 +82,7 @@ program.parse(process.argv);
 /**
  * Requests the password-challenge from the router. Calls handleChallenge() on success.
  */
-function getChallenge(fieldName, dataCallback) {
+function getChallenge(filename, dataCallback) {
   var data = querystring.stringify({
         csrf_token: "nulltoken",
         showpw: "0",
@@ -104,7 +104,7 @@ function getChallenge(fieldName, dataCallback) {
       res.on('data', function (chunk) {
           // challengev -> will be sent as cookie 
           challengev = JSON.parse(chunk)[1].varvalue;
-          handleChallenge(challengev, fieldName, dataCallback);          
+          handleChallenge(challengev, filename, dataCallback);          
       });
   });
 
@@ -115,17 +115,17 @@ function getChallenge(fieldName, dataCallback) {
 /** 
  * Hashes challenge + password and sent it back to speedport. 
  */
-function handleChallenge(challenge, fieldName, dataCallback) {
+function handleChallenge(challenge, filename, dataCallback) {
   var encryptpwd = sjcl.hash.sha256.hash(challenge + ":" + PASSWORD);
   var passwordhash = sjcl.codec.hex.fromBits(encryptpwd);
 
-  sendPassword(passwordhash, fieldName, dataCallback);
+  sendPassword(passwordhash, filename, dataCallback);
 }
 
 /** 
  * Sends the hashed password to the router and acquires a session ID.
  */
-function sendPassword(passwordHash, fieldName, dataCallback) {
+function sendPassword(passwordHash, filename, dataCallback) {
   var data = querystring.stringify({
       password: passwordHash,
       showpw: "0",
@@ -169,7 +169,7 @@ function sendPassword(passwordHash, fieldName, dataCallback) {
           var sid = cookie.match(/^.*(SessionID_R3=[a-zA-Z0-9]*).*/);
           sessionID = sid[1];
 
-          downloadJsonInfo(fieldName, dataCallback);
+          downloadJsonInfo(filename, dataCallback);
       });
   });
 
@@ -178,36 +178,13 @@ function sendPassword(passwordHash, fieldName, dataCallback) {
 }
 
 /**
- * Downloads the given json, the following paths are known to be valid:
- * 
- * /data/dsl.json
- * /data/interfaces.json
- * /data/arp.json
- * /data/session.json
- * /data/dhcp_client.json
- * /data/dhcp_server.json
- * /data/ipv6.json
- * /data/dns.json
- * /data/routing.json
- * /data/igmp_proxy.json
- * /data/igmp_snooping.json
- * /data/wlan.json
- * /data/module.json
- * /data/memory.json
- * /data/speed.json
- * /data/webdav.json
- * /data/bonding_client.json
- * /data/bonding_tunnel.json
- * /data/filterlist.json
- * /data/bonding_tr181.json
- * /data/letinfo.json
- *
- * /data/Status.json (No login needed)
+ * Downloads the given json from  /data/$FILENAME.json. See help for a list 
+ * of known and valid file names.
  */
-function downloadJsonInfo(fieldName, dataCallback)
+function downloadJsonInfo(fileName, dataCallback)
 {
   var cookie = "challengev=" + challengev + "; " + sessionID;
-  var requestPath = "/data/" + fieldName + ".json";
+  var requestPath = "/data/" + fileName + ".json";
 
   var options = {
       host: SPEEDPORT,
@@ -297,7 +274,7 @@ if (!process.argv.slice(2).length) {
   program.outputHelp();
   process.exit();
 }
-else if (!program.output || !program.fieldname) {
+else if (!program.output || !program.filename) {
   console.log('⚠️  Error: output format and field name must be specified.');
   program.outputHelp();
   process.exit();
@@ -312,14 +289,14 @@ else if (program.output == 'rrd' && !program.dsNames) {
 // format parameter given?
 if (program.output && program.output != 'rrd') {
   // simple json output
-  getChallenge(program.fieldname, function(data) {
+  getChallenge(program.filename, function(data) {
     var parsed = safeParse(data);
     console.log(parsed);
   });
 } 
 // RRDUPDATE parameter given?
-else if (program.fieldname && program.dsNames) {
-  getChallenge(program.fieldname, function(data) {
+else if (program.filename && program.dsNames) {
+  getChallenge(program.filename, function(data) {
     var parsed = safeParse(data);
 
     // split fields
