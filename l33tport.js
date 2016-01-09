@@ -147,15 +147,9 @@ function sendPassword(passwordHash, fieldName, dataCallback) {
       res.on('data', function (chunk) {
 
           // chunk = status JSON response
-          var statusJSON = chunk;
-
-          // fix invalid json sent from the router (on successful login,
-          // there is a comma after the last brace)
-          if (chunk.lastIndexOf('}') < chunk.lastIndexOf(','))
-          {
-            // the "fix" is to append an empty entity
-            statusJSON = chunk.replace(']','{}]');
-          }
+          // The regex fixes invalid json sent from the router (on
+          // successful login there is a comma after the last brace)
+          var statusJSON = chunk.replace(/}\s*,\s*]/g, "}]");
           status = JSON.parse(statusJSON);
 
           // Result json uses "vartype" which is value, option or status.
@@ -278,8 +272,8 @@ function walkArray(inArray, dsNames) {
  */
 function safeParse(input) {
     var parsed = null;
-    try {
-      parsed = JSON.parse(input);
+    try{
+      parsed = JSON.parse(input.replace(/}\s*,\s*]/g, "}]"));
     }
     catch (e) {
       console.error("Could not parse JSON:");
