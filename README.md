@@ -59,6 +59,14 @@ You may use one of the following fieldnames (i.e. -f dsl):
 * **bonding_tr181**    Bonding TR-181
 * **lteinfo**          LTE information
 * **Status**           Systeminformation (no login needed)
+* **SecureStatus**     Secure system information (login needed)
+* **Overview**         General status information, i.e. tunnel status
+* **modules**
+* **Abuse**            trusted SMTP servers configuration
+* **DECTStation**      DECT configuration
+* **hsdelmobil**       DECT handset status
+* **LAN**              LAN status (DHCP assigned IPs ect.)
+
 
 Examples
 ========
