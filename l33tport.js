@@ -151,12 +151,15 @@ function sendPassword(passwordHash, filename, dataCallback) {
 
   var req = http.request(options, function(res) {
       res.setEncoding('utf8');
+      var body = '';
       res.on('data', function (chunk) {
+        body += chunk;
+      }).on('end', function() {
 
-          // chunk = status JSON response
+          // body = status JSON response
           // The regex fixes invalid json sent from the router (on
           // successful login there is a comma after the last brace)
-          var statusJSON = chunk.replace(/}\s*,\s*]/g, "}]");
+          var statusJSON = body.replace(/}\s*,\s*]/g, "}]");
           status = JSON.parse(statusJSON);
 
           // Result json uses "vartype" which is value, option or status.
