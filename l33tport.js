@@ -301,7 +301,7 @@ if (program.output && program.output != 'rrd') {
   // simple json output
   getChallenge(program.filename, function(data) {
     var parsed = safeParse(data);
-    console.log(parsed);
+    console.log(JSON.stringify(parsed));
   });
 } 
 // RRDUPDATE parameter given?
