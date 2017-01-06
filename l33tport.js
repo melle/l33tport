@@ -124,7 +124,7 @@ function getChallenge(filename, dataCallback) {
  */
 function handleChallenge(challenge, filename, dataCallback) {
   var encryptpwd = sjcl.hash.sha256.hash(challenge + ":" + PASSWORD);
-  var passwordhash = sjcl.codec.hex.fromBits(encryptpwd);
+  var passwordhash = sjcl.codec.hex.fromBits(encryptpwd, true);
 
   sendPassword(passwordhash, filename, dataCallback);
 }
