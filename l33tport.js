@@ -121,7 +121,8 @@ function fetchIndexPage(filename, dataCallback) {
     // is locatad in the header of the page like this:
     // var challenge = "48C0b35b5cE7bbdFcab7DbAEbf3FBf1DBaA60C2B18aB9b700aAc23c6a66e095a";
     var challenge = result.match("[0-9,a-z,A-Z]{64}");
-    console.log("var challenge = " + challenge);
+    // Don't log the challenge for easier output parsing
+    // console.log("var challenge = " + challenge);
     handleChallenge(challenge, filename, dataCallback);
   });
 }
