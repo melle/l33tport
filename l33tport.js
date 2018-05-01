@@ -4,7 +4,7 @@
 "THE BEER-WARE LICENSE" (Revision 42): <github@dysternis.de> wrote this
 file. As long as you retain this notice you can do whatever you want with this
 stuff. If we meet some day, and you think this stuff is worth it, you can buy
-me a beer in return. Thomas Mellenthin. 
+me a beer in return. Thomas Mellenthin.
 -----------------------------------------------------------------------------
 */
 
@@ -86,57 +86,66 @@ program.on('--help', function(){
 program.parse(process.argv);
 
 
-/**
- * Requests the password-challenge from the router. Calls handleChallenge() on success.
- */
-function getChallenge(filename, dataCallback) {
-  var data = querystring.stringify({
-        csrf_token: "nulltoken",
-        showpw: "0",
-        challengev: "null"
-      });
+function fetchUrl(host, path, onResult) {
+    var options = {
+      host: host,
+      port: 80,
+      path: path,
+      method: 'GET',
+    };
+    var req = http.request(options, function(res) {
+        var output = '';
+        res.setEncoding('utf8');
 
-  var options = {
-      host: SPEEDPORT,
-      path: '/data/Login.json',
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': Buffer.byteLength(data)
-      }
-  };
+        res.on('data', function (chunk) {
+            output += chunk;
+        });
 
-  var req = http.request(options, function(res) {
-      res.setEncoding('utf8');
-      res.on('data', function (chunk) {
-          // challengev -> will be sent as cookie 
-          challengev = JSON.parse(chunk)[1].varvalue;
-          handleChallenge(challengev, filename, dataCallback);          
-      });
+        res.on('end', function() {
+            onResult(res.statusCode, output);
+        });
+    });
+
+    req.on('error', function(err) {
+        //res.send('error: ' + err.message);
+    });
+
+    req.end();
+};
+
+
+function fetchIndexPage(filename, dataCallback) {
+
+  fetchUrl(SPEEDPORT, '/html/login/index.html', function(statusCode, result) {
+    // result is the complete html page, we scrape the challenge var which
+    // is locatad in the header of the page like this:
+    // var challenge = "48C0b35b5cE7bbdFcab7DbAEbf3FBf1DBaA60C2B18aB9b700aAc23c6a66e095a";
+    var challenge = result.match("[0-9,a-z,A-Z]{64}");
+    // Don't log the challenge for easier output parsing
+    // console.log("var challenge = " + challenge);
+    handleChallenge(challenge, filename, dataCallback);
   });
-
-  req.write(data);
-  req.end();
 }
 
-/** 
- * Hashes challenge + password and sent it back to speedport. 
+/**
+ * Hashes challenge + password and sent it back to speedport.
  */
 function handleChallenge(challenge, filename, dataCallback) {
   var encryptpwd = sjcl.hash.sha256.hash(challenge + ":" + PASSWORD);
   var passwordhash = sjcl.codec.hex.fromBits(encryptpwd, true);
 
-  sendPassword(passwordhash, filename, dataCallback);
+  sendPassword(passwordhash, challenge, filename, dataCallback);
 }
 
-/** 
+/**
  * Sends the hashed password to the router and acquires a session ID.
  */
-function sendPassword(passwordHash, filename, dataCallback) {
+function sendPassword(passwordHash, challenge, filename, dataCallback) {
   var data = querystring.stringify({
       password: passwordHash,
+      csrf_token: "nulltoken",
       showpw: "0",
-      csrf_token: "nulltoken"
+      challengev: challenge
     });
 
   var options = {
@@ -145,6 +154,8 @@ function sendPassword(passwordHash, filename, dataCallback) {
       method: 'POST',
       headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'http://' + SPEEDPORT + '/html/login/index.html',
           'Content-Length': Buffer.byteLength(data)
       }
   };
@@ -188,7 +199,7 @@ function sendPassword(passwordHash, filename, dataCallback) {
 }
 
 /**
- * Downloads the given json from  /data/$FILENAME.json. See help for a list 
+ * Downloads the given json from  /data/$FILENAME.json. See help for a list
  * of known and valid file names.
  */
 function downloadJsonInfo(fileName, dataCallback)
@@ -226,10 +237,10 @@ function downloadJsonInfo(fileName, dataCallback)
 }
 
 /**
- * Walks the multidimensional array given and returns the values 
+ * Walks the multidimensional array given and returns the values
  * of the given keys.
  *
- * At the moment the order of the keys must be the same order of 
+ * At the moment the order of the keys must be the same order of
  * the elemens in the input array.
  *
  * Solution from http://stackoverflow.com/a/10666489/699208
@@ -248,7 +259,7 @@ function walkArray(inArray, dsNames) {
         }
       }
     }
-    
+
     // For unknown reasons, the result is prefixed with a colon
     // sometimes. I guess the array contains bogus content then.
     return s.join(":").replace(/^:/, '');
@@ -299,11 +310,11 @@ else if (program.output == 'rrd' && !program.dsNames) {
 // format parameter given?
 if (program.output && program.output != 'rrd') {
   // simple json output
-  getChallenge(program.filename, function(data) {
+  fetchIndexPage(program.filename, function(data) {
     var parsed = safeParse(data);
     console.log(JSON.stringify(parsed));
   });
-} 
+}
 // RRDUPDATE parameter given?
 else if (program.filename && program.dsNames) {
   getChallenge(program.filename, function(data) {
