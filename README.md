@@ -10,8 +10,16 @@ This script helps you to access the status information that is available in the 
 
 ![The engineer menu of the Telekom Speedport Hybrid.](assets/EngineerMenu.jpg)
 
+Login Problems
+==============
+
+Speedport firmware >= `050124.03.05*` changed the login procedure. In case you are using an older firmware, please use the branch [`old-login`](https://github.com/melle/l33tport/tree/old-login).
+Current master branch supports newer firmware versions.
+
+
 Prerequisites
 ==========
+
 l33tport was written using node.js, so you need to have a working node installation. For the crypto-foo we're are using the [Stanford Javascript Crypto Library](https://github.com/bitwiseshiftleft/sjclsjcl.js), for commandline parsing commander is needed:
 
 ```
@@ -67,6 +75,7 @@ You may use one of the following fieldnames (i.e. -f dsl):
 * **hsdelmobil**       DECT handset status
 * **LAN**              LAN status (DHCP assigned IPs ect.)
 
+The firmware provides more fields, but the contents is not plaintext json. Contributions to make these fields available as plain text are appreciated 😬
 
 Examples
 ========
@@ -130,3 +139,14 @@ It may be fed directly into a ```rrdtool update``` call:
     rrdtool update dsl.rrd $(./l33tport.js -f dsl -o rrd -d "uSNR,dSNR,uactual,dactual,uatainable,dattainable")
 
 See the ```rrdtool``` directory for sample scripts.
+
+Contributors
+============
+
+Thanks to:
+
+* [housemaister](https://github.com/housemaister)
+* [Henning](https://github.com/hensur)
+* [Manfred Winter](https://github.com/mahowi)
+* [Manuel Mühlig](https://github.com/manuelmuehlig)
+* [descilla](https://github.com/descilla)
