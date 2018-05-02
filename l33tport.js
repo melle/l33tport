@@ -317,7 +317,7 @@ if (program.output && program.output != 'rrd') {
 }
 // RRDUPDATE parameter given?
 else if (program.filename && program.dsNames) {
-  getChallenge(program.filename, function(data) {
+  fetchIndexPage(program.filename, function(data) {
     var parsed = safeParse(data);
 
     // split fields
