@@ -145,6 +145,8 @@ See the [```rrdtool```](rrdtool/) directory for sample scripts.
 InfluxDB / Grafana / Chronograf integration
 ===========================================
 
+![A rather boring line status.](assets/chronograf.png)
+
 If you prefer [Grafana](https://grafana.com/) or [Chronograf](https://docs.influxdata.com/chronograf/) for plotting the data, you may find the ```-o influx``` option useful. 
 This example downloads the relevant LTE and DSL status data:
 
