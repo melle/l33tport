@@ -36,11 +36,12 @@ Usage: speedport [options]
 
 Options:
 
-    -h, --help                   output usage information
-    -V, --version                output the version number
-    -o, --output <format>        Output format (json, rrd)
-    -d, --dsNames <dsNames>      rrdtool update format specifier
-    -f, --fieldname <fieldname>  specifies the status field
+    -h, --help                 output usage information
+    -V, --version              output the version number
+    -o, --output <format>      Output format (json, rrd, influx)
+    -d, --dsNames <dsNames>    rrdtool update format specifier. Mandatory when '-o rrd' is used
+    -k, --keys <keys>          key names for influx output. Mandatory when '-o influx' is used
+    -f, --filename <filename>  specifies the file to download
 
 
 You may use one of the following fieldnames (i.e. -f dsl):
@@ -122,7 +123,7 @@ The result will look like this:
 ```
 
 rrdtool integration
-=============
+===================
 
 ![A DSL line with lots of errors.](assets/dsl-48h.png)
 
@@ -138,7 +139,37 @@ It may be fed directly into a ```rrdtool update``` call:
 
     rrdtool update dsl.rrd $(./l33tport.js -f dsl -o rrd -d "uSNR,dSNR,uactual,dactual,uatainable,dattainable")
 
-See the ```rrdtool``` directory for sample scripts.
+See the [```rrdtool```](rrdtool/) directory for sample scripts.
+
+
+InfluxDB / Grafana / Chronograf integration
+===========================================
+
+If you prefer [Grafana](https://grafana.com/) or [Chronograf](https://docs.influxdata.com/chronograf/) for plotting the data, you may find the ```-o influx``` option useful. 
+This example downloads the relevant LTE and DSL status data:
+
+    node l33tport.js -f lteInfo -o influx -k rsrp,rsrq
+    node l33tport.js -f dsl     -o influx -k uactual,dactual,uattainable,dattainable,uSNR,dSNR,uCRC,dCRC,uHEC,dHEC
+
+The output will look like this:
+
+```
+    lteInfo_rsrp value=-72
+    lteInfo_rsrq value=-7
+    dsl_uactual value=1167
+    dsl_dactual value=13947
+    dsl_uattainable value=1268
+    dsl_dattainable value=13504
+    dsl_uSNR value=81
+    dsl_dSNR value=52
+    dsl_uCRC value=223
+    dsl_dCRC value=119710
+    dsl_uHEC value=131
+    dsl_dHEC value=501650
+```
+
+Which can be sent directly as POST request to an InfluxDB instance. See the [```influxdb```](influxdb/) directory for a sample script.
+
 
 Contributors
 ============

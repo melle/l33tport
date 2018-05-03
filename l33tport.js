@@ -30,57 +30,67 @@ var sessionID = "";
 
 // command line parsing
 program
-  .version('0.0.2')
+  .version('0.0.3')
   .description('Downloads JSON status data from Telekom Speedport Hybrid')
-  .option('-o, --output <format>', 'Output format (json, rrd)', /^(json|rrd)$/i, 'json')
-  .option('-d, --dsNames <dsNames>', 'rrdtool update format specifier')
+  .option('-o, --output <format>', 'Output format (json, rrd, influx)', /^(json|rrd|influx)$/i, 'json')
+  .option('-d, --dsNames <dsNames>', 'rrdtool update format specifier. Mandatory when \'-o rrd\' is used')
+  .option('-k, --keys <keys>', 'key names for influx output. Mandatory when \'-o influx\' is used')
   .option('-f, --filename <filename>', 'specifies the file to download');
 
 program.on('--help', function(){
   console.log('  Here is a list of the known working file names:');
   console.log('');
-  console.log('  dsl              DSL connection status and line information');
-  console.log('  interfaces       Network interfaces');
-  console.log('  arp              ARP table');
-  console.log('  session          PPPoE Session');
-  console.log('  dhcp_client      DHCP client');
-  console.log('  dhcp_server      DHCP server, includes DHCP leases ');
-  console.log('  ipv6             IPv6 Router Advertisement');
-  console.log('  dns              DNS server and cache information');
-  console.log('  routing          Routing table');
-  console.log('  igmp_proxy       IGMP Proxy');
-  console.log('  igmp_snooping    IGMP Snooping Table');
-  console.log('  wlan             WLAN status and information');
-  console.log('  module           Software version information');
-  console.log('  memory           Memory and CPU utilization');
-  console.log('  speed            Speed dial');
-  console.log('  webdav           WebDAV URL');
-  console.log('  bonding_client   Bonding HA client');
-  console.log('  bonding_tunnel   Bonding tunnel');
-  console.log('  filterlist       Filter list table');
-  console.log('  bonding_tr181    Bonding TR-181');
-  console.log('  lteinfo          LTE information');
-  console.log('  Status           System information (no login needed)');
-  console.log('  SecureStatus     Secure system information (login needed)');
-  console.log('  Overview         General status information, i.e. tunnel status');
-  console.log('  modules          ');
-  console.log('  Abuse            trusted SMTP servers configuration');
-  console.log('  DECTStation      DECT configuration');
-  console.log('  hsdelmobil       DECT handset status');
-  console.log('  LAN              LAN status (DHCP assigned IPs ect.)');
+  console.log('    dsl              DSL connection status and line information');
+  console.log('    interfaces       Network interfaces');
+  console.log('    arp              ARP table');
+  console.log('    session          PPPoE Session');
+  console.log('    dhcp_client      DHCP client');
+  console.log('    dhcp_server      DHCP server, includes DHCP leases ');
+  console.log('    ipv6             IPv6 Router Advertisement');
+  console.log('    dns              DNS server and cache information');
+  console.log('    routing          Routing table');
+  console.log('    igmp_proxy       IGMP Proxy');
+  console.log('    igmp_snooping    IGMP Snooping Table');
+  console.log('    wlan             WLAN status and information');
+  console.log('    module           Software version information');
+  console.log('    memory           Memory and CPU utilization');
+  console.log('    speed            Speed dial');
+  console.log('    webdav           WebDAV URL');
+  console.log('    bonding_client   Bonding HA client');
+  console.log('    bonding_tunnel   Bonding tunnel');
+  console.log('    filterlist       Filter list table');
+  console.log('    bonding_tr181    Bonding TR-181');
+  console.log('    lteinfo          LTE information');
+  console.log('    Status           System information (no login needed)');
+  console.log('    SecureStatus     Secure system information (login needed)');
+  console.log('    Overview         General status information, i.e. tunnel status');
+  console.log('    modules          ');
+  console.log('    Abuse            trusted SMTP servers configuration');
+  console.log('    DECTStation      DECT configuration');
+  console.log('    hsdelmobil       DECT handset status');
+  console.log('    LAN              LAN status (DHCP assigned IPs ect.)');
+  console.log('');
+  console.log('    Note: Field names are case-insensitive');
   console.log('');
   console.log('  Examples:');
   console.log('');
-  console.log('  Download dsl status file and print content in JSON format:');
+  console.log('    Download dsl status file and print content in JSON format:');
   console.log('');
-  console.log('  $ node ./l33tport.js -f dsl');
+  console.log('    $ node ./l33tport.js -f dsl');
   console.log('');
-  console.log('  Download dsl status file and format output to fit as input for \'rddtool update\'');
-  console.log('  command. Field names must be equal to names used in the JSON output:');
+  console.log('    Download dsl status file and format output to fit as input for \'rddtool update\'');
+  console.log('    command. Field names must be equal to names used in the JSON output:');
   console.log('');
-  console.log('  $ node ./l33tport.js -f dsl -o rrd \\');
-  console.log('    -d "uSNR,dSNR,uactual,dactual,uatainable,dattainable"');
+  console.log('    $ node ./l33tport.js -f dsl -o rrd \\');
+  console.log('      -d uSNR,dSNR,uactual,dactual,uatainable,dattainable');
   console.log('');
+  console.log('    Download dsl status file and format output as key-value list for InfluxDB feeding.');
+  console.log('    Field names must be equal to names used in the JSON output:');
+  console.log('');
+  console.log('    $  node l33tport.js -f dsl -o influx \\');
+  console.log('      -k uactual,dactual,uattainable,dattainable,uSNR,dSNR,uCRC,dCRC,uHEC,dHEC');
+  console.log('');
+  
 });
 
 program.parse(process.argv);
@@ -260,9 +270,8 @@ function walkArray(inArray, dsNames) {
       }
     }
 
-    // For unknown reasons, the result is prefixed with a colon
-    // sometimes. I guess the array contains bogus content then.
-    return s.join(":").replace(/^:/, '');
+    // flatten the multi-dimensional array
+    return [].concat.apply([], s)
 }
 
 /**
@@ -290,33 +299,42 @@ function safeParse(input) {
     return parsed;
 }
 
-// check parameters, was any parameter given?
+// check parameters
+
+// was any parameter given?
 if (!process.argv.slice(2).length) {
   program.outputHelp();
   process.exit();
 }
-else if (!program.output || !program.filename) {
-  console.log('⚠️  Error: output format and field name must be specified.');
+// we need at least a filename
+else if (!program.filename) {
+  console.log('⚠️  Error: at least a filename (-f) name must be specified.');
   program.outputHelp();
   process.exit();
 }
+// -o rrd requires dsNames
 else if (program.output == 'rrd' && !program.dsNames) {
-  console.log('⚠️  Error: rrdoutput requires dsNames parameter.');
+  console.log('⚠️  Error: rrd output requires the -d / --dsNames parameter.');
+  program.outputHelp();
+  process.exit();
+}
+else if (program.output == 'keyvalue' && !program.keys) {
+  console.log('⚠️  Error: keyvalue output requires the -k / --keys parameter.');
   program.outputHelp();
   process.exit();
 }
 
 
-// format parameter given?
-if (program.output && program.output != 'rrd') {
+// 👾 format parameter given?
+if (!program.output || program.output == 'json') {
   // simple json output
   fetchIndexPage(program.filename, function(data) {
     var parsed = safeParse(data);
     console.log(JSON.stringify(parsed));
   });
 }
-// RRDUPDATE parameter given?
-else if (program.filename && program.dsNames) {
+// 📈 RRDUPDATE parameter given?
+else if (program.filename && program.output == 'rrd' && program.dsNames) {
   fetchIndexPage(program.filename, function(data) {
     var parsed = safeParse(data);
 
@@ -333,9 +351,32 @@ else if (program.filename && program.dsNames) {
     // prepare values section
     rrdUpdate += ' N:';
 
-    // walk the values array
-    rrdUpdate += walkArray(parsed, dsNames);
+    // walk the values array, result is an array in an array
+    values = walkArray(parsed, dsNames);
+
+    rrdUpdate += values.join(":")
 
     console.log(rrdUpdate);
   });
-};
+}
+// 🔑 key-value mode?
+else if (program.filename && program.keys) {
+  fetchIndexPage(program.filename, function(data) {
+    var parsed = safeParse(data);
+
+    // split fields
+    keys = program.keys.split(',');
+
+    // walk the values array, result is an array in an array
+    values = walkArray(parsed, keys)
+
+    for (i = 0; i < keys.length; i++) {
+      console.log(program.filename + "_" + keys[i] + " value=" + values[i])
+    }
+  });
+} 
+// can't happen 🙃
+else {
+  program.outputHelp();
+  process.exit();
+}
